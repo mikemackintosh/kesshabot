@@ -14,7 +14,7 @@ import (
 
 var (
 	hostPrivateKeySigner ssh.Signer
-	twClient             = Twitter{}
+	twClient             = new(Twitter)
 )
 
 type Twitter struct {
@@ -35,6 +35,28 @@ func init() {
 	}
 }
 
+func setupTwitter() {
+	// Login and stuff
+	fmt.Printf("Usin Consumer: %s\n", os.Getenv("TWITTER_CONSUMER_KEY"))
+	twconfig := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
+	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
+	httpClient := twconfig.Client(oauth1.NoContext, token)
+	client := twitter.NewClient(httpClient)
+
+	// Verify Credentials
+	verifyParams := &twitter.AccountVerifyParams{
+		SkipStatus:   twitter.Bool(true),
+		IncludeEmail: twitter.Bool(true),
+	}
+	user, _, err := client.Accounts.VerifyCredentials(verifyParams)
+	if err != nil {
+		fmt.Printf("[Error] %s\n", err)
+		os.Exit(2)
+	}
+	twClient.Client = client
+	fmt.Printf("User's ACCOUNT:\n%+v\n", user.ScreenName)
+}
+
 func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 	log.Println(conn.RemoteAddr(), "authenticate with", key.Type())
 	log.Printf("sshcapture: ip=%s user=%s type=%s\n", conn.RemoteAddr(), conn.User(), key.Type())
@@ -43,22 +65,20 @@ func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error)
 }
 
 func passAuth(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-	msg := fmt.Sprintf("IP:%s tried to log in with username %s and password %s\n", conn.RemoteAddr(), conn.User(), string(password))
+	msg := fmt.Sprintf("💻: %s tried to log in with 👤: %s and 🔐: %s\n", conn.RemoteAddr(), conn.User(), string(password))
 	log.Println(msg)
 	_, _, _ = twClient.Client.Statuses.Update(msg, nil)
 	return nil, fmt.Errorf("user %s (password %s) is bullshit and you're an asshole.", conn.User(), string(password))
 }
 
 func main() {
-	twconfig := oauth1.NewConfig("consumerKey", os.Getenv("TWITTER_CONSUMER"))
-	token := oauth1.NewToken("accessToken", os.Getenv("TWITTER_TOKEN"))
-	httpClient := twconfig.Client(oauth1.NoContext, token)
-	twClient.Client = twitter.NewClient(httpClient)
+	// Lets setup twitter and the shits
+	setupTwitter()
 
 	config := ssh.ServerConfig{
-		PublicKeyCallback: keyAuth,
-		PasswordCallback:  passAuth,
-		ServerVersion:     "SSH-2.0-YOURMOM",
+		// PublicKeyCallback: keyAuth,
+		PasswordCallback: passAuth,
+		ServerVersion:    "SSH-2.0-YOURMOM",
 	}
 	config.AddHostKey(hostPrivateKeySigner)
 
