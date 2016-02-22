@@ -17,12 +17,17 @@ var (
 	twClient             = new(Twitter)
 )
 
+// Twitter holds the twitter client struct
 type Twitter struct {
 	Client *twitter.Client
 }
 
 func init() {
-	keyPath := "./id_rsa"
+
+	keyPath := "/etc/kessha/id_rsa"
+	if len(os.Getenv("KESSHABOT_RSAID")) > 0 {
+		keyPath = os.Getenv("KESSHABOT_RSAID")
+	}
 
 	hostPrivateKey, err := ioutil.ReadFile(keyPath)
 	if err != nil {
@@ -63,7 +68,7 @@ func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error)
 }
 
 func passAuth(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-	msg := fmt.Sprintf("💻: %s tried to log in with 👤: %s and 🔐: %s\n", conn.RemoteAddr(), conn.User(), string(password))
+	msg := fmt.Sprintf("💻 %s\n👤 %s\n🔐 %s\n", conn.RemoteAddr(), conn.User(), string(password))
 	log.Println(msg)
 	_, _, _ = twClient.Client.Statuses.Update(msg, nil)
 	return nil, fmt.Errorf("user %s (password %s) is bullshit and you're an asshole.", conn.User(), string(password))
