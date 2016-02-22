@@ -37,7 +37,6 @@ func init() {
 
 func setupTwitter() {
 	// Login and stuff
-	fmt.Printf("Usin Consumer: %s\n", os.Getenv("TWITTER_CONSUMER_KEY"))
 	twconfig := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
 	httpClient := twconfig.Client(oauth1.NoContext, token)
@@ -48,13 +47,12 @@ func setupTwitter() {
 		SkipStatus:   twitter.Bool(true),
 		IncludeEmail: twitter.Bool(true),
 	}
-	user, _, err := client.Accounts.VerifyCredentials(verifyParams)
+	_, _, err := client.Accounts.VerifyCredentials(verifyParams)
 	if err != nil {
 		fmt.Printf("[Error] %s\n", err)
 		os.Exit(2)
 	}
 	twClient.Client = client
-	fmt.Printf("User's ACCOUNT:\n%+v\n", user.ScreenName)
 }
 
 func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
