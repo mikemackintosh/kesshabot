@@ -1,0 +1,40 @@
+{
+	"ImportPath": "github.com/mikemackintosh/kesshabot",
+	"GoVersion": "go1.5.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/cenkalti/backoff",
+			"Rev": "4dc77674aceaabba2c7e3da25d4c823edfb73f99"
+		},
+		{
+			"ImportPath": "github.com/dghubble/go-twitter/twitter",
+			"Rev": "057bb913e42697f48e57fc9599e50c978f6ac095"
+		},
+		{
+			"ImportPath": "github.com/dghubble/oauth1",
+			"Comment": "v0.2.0-4-gb976e49",
+			"Rev": "b976e493be28db57be393db34b4fc1a569f0459b"
+		},
+		{
+			"ImportPath": "github.com/dghubble/sling",
+			"Comment": "v1.0-12-gdae3211",
+			"Rev": "dae32115349f89dcfb306b4e1e4b42813c189b6a"
+		},
+		{
+			"ImportPath": "github.com/google/go-querystring/query",
+			"Rev": "2a60fc2ba6c19de80291203597d752e9ba58e4c0"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/curve25519",
+			"Rev": "beef0f4390813b96e8e68fd78570396d0f4751fc"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh",
+			"Rev": "beef0f4390813b96e8e68fd78570396d0f4751fc"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "62ac18b461605b4be188bbc7300e9aa2bc836cd4"
+		}
+	]
+}
