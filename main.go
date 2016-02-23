@@ -23,7 +23,6 @@ type Twitter struct {
 }
 
 func init() {
-
 	keyPath := "/etc/kessha/id_rsa"
 	if len(os.Getenv("KESSHABOT_RSAID")) > 0 {
 		keyPath = os.Getenv("KESSHABOT_RSAID")
@@ -60,18 +59,24 @@ func setupTwitter() {
 	twClient.Client = client
 }
 
+/*
 func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 	log.Println(conn.RemoteAddr(), "authenticate with", key.Type())
 	log.Printf("sshcapture: ip=%s user=%s type=%s\n", conn.RemoteAddr(), conn.User(), key.Type())
 
-	return nil, fmt.Errorf("user %s (key-type %s) is bullshit and you're an asshole.", conn.User(), key.Type())
+	return nil, fmt.Errorf("user %s (key-type %s) is bullshit and you're an asshole", conn.User(), key.Type())
 }
+*/
 
+// Pass auth will record password authentication attempts to the server
 func passAuth(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 	msg := fmt.Sprintf("💻 %s\n👤 %s\n🔐 %s\n", conn.RemoteAddr(), conn.User(), string(password))
 	log.Println(msg)
-	_, _, _ = twClient.Client.Statuses.Update(msg, nil)
-	return nil, fmt.Errorf("user %s (password %s) is bullshit and you're an asshole.", conn.User(), string(password))
+	_, _, err := twClient.Client.Statuses.Update(msg, nil)
+	if err != nil {
+		log.Printf("[Error] passAuth: %s\n", err)
+	}
+	return nil, fmt.Errorf("Never auth")
 }
 
 func main() {
