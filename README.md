@@ -1,4 +1,5 @@
 # Ke$$ha BOT
+[![Go Report Card](https://goreportcard.com/badge/github.com/mikemackintosh/kesshabot)](https://goreportcard.com/report/github.com/mikemackintosh/kesshabot)
 
 Ke$$ha bot is a SSH honeybot. It is designed to tweet everytime someone maliciously attempts to access SSH on your server.
 
