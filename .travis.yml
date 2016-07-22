@@ -1,0 +1,25 @@
+sudo: false
+language: go
+go:
+- 1.6
+before_install:
+- go get github.com/tools/godep
+- go get github.com/alecthomas/gometalinter
+- go get golang.org/x/tools/cmd/cover
+- go get -u github.com/client9/misspell/cmd/misspell
+- go get github.com/aws/aws-sdk-go/...
+- go get github.com/BurntSushi/toml
+install:
+- export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
+- export PATH="${TRAVIS_BUILD_DIR}/vendor:$PATH"
+- make setup
+script:
+- make travis
+after_success:
+- contrib/push.sh
+branches:
+  only:
+  - master
+env:
+  global:
+    secure: pz0vxrxxlD05B/Ud/GtF+xAKwHC7NTiFDM8vtmhnV+nQ+8rclMiO96c1B7ayg0xemfnv4l0hKypnMbBlsjGcVfenCGn9XvrpC7a6T/AeglNnlC1p87yXQbi/+Qpz27zOFlEz2gyHZXzjfAAuRYe2hpCn+LSW02qnHgZwtHuRvAhTDAG/wGODRI2f3bmOpKFqdD2Ce6V81pTUM8/s1vlczwdHy9em7NZRtAISbam/EkAnl3r0OsQ0mEk2OZALUz5e1EgY5TUwkx1cCxWw6SKYkg2WgXphpKRyaXLfOdYxi73O25xpwRFr016VWqPGhO/7R/U602Rmu5WmKWjvnFlvPd+5nlqWfnTWCMk7E8uTGGvb63DR+hjVqAuZ4xrO4tzT1+gUgwLi8THaf4C5+g6RywCa28gwu6sSLjWNGAKfxWRZ7fBbj5qTcgxlCD1wHPsM2p0+/gPHYPxHnfoYXeWT6U9xcG3nxG9l5FBHUd9DZwd/fe3Xav+6jpa9FIatxHduB2TWpwTDoXKStF345h/+GyQq8sNBkYoKsxZSwaCc2+EA8MwJ7Exm5ZK7H5Y6it1hm+ule0CfpigWeeCZkdKXUcb9CrF9csb4yVg8jL84CbkByq5DQGCyjjolGjFo/neKZFRiWZAOOREq6CS+FldxR4lMgZOEb0/RW4G1K3Kn3F0=
