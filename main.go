@@ -1,26 +1,19 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
 
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	"golang.org/x/crypto/ssh"
 )
 
 var (
 	hostPrivateKeySigner ssh.Signer
-	twClient             = new(Twitter)
 )
-
-// Twitter holds the twitter client struct
-type Twitter struct {
-	Client *twitter.Client
-}
 
 func init() {
 	keyPath := "/etc/kessha/id_rsa"
@@ -39,38 +32,21 @@ func init() {
 	}
 }
 
-func setupTwitter() {
-	// Login and stuff
-	twconfig := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
-	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
-	httpClient := twconfig.Client(oauth1.NoContext, token)
-	client := twitter.NewClient(httpClient)
-
-	// Verify Credentials
-	verifyParams := &twitter.AccountVerifyParams{
-		SkipStatus:   twitter.Bool(true),
-		IncludeEmail: twitter.Bool(true),
-	}
-	_, _, err := client.Accounts.VerifyCredentials(verifyParams)
-	if err != nil {
-		fmt.Printf("[Error] %s\n", err)
-		os.Exit(2)
-	}
-	twClient.Client = client
-}
-
-/*
 func keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-	log.Println(conn.RemoteAddr(), "authenticate with", key.Type())
-	log.Printf("sshcapture: ip=%s user=%s type=%s\n", conn.RemoteAddr(), conn.User(), key.Type())
+	md5sum := md5.Sum(key.Marshal())
 
-	return nil, fmt.Errorf("user %s (key-type %s) is bullshit and you're an asshole", conn.User(), key.Type())
+	msg := fmt.Sprintf("PubKey Auth Attempted:\n💻 %s\n👤 %s\n🔐 %s\n", conn.RemoteAddr(), conn.User(), rfc4716hex(md5sum[:]))
+	log.Println(msg)
+	_, _, err := twClient.Client.Statuses.Update(msg, nil)
+	if err != nil {
+		log.Printf("[Error] pubkeyAuth: %s\n", err)
+	}
+	return nil, fmt.Errorf("Never auth")
 }
-*/
 
 // Pass auth will record password authentication attempts to the server
 func passAuth(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-	msg := fmt.Sprintf("💻 %s\n👤 %s\n🔐 %s\n", conn.RemoteAddr(), conn.User(), string(password))
+	msg := fmt.Sprintf("Password Auth Attempted:\n💻 %s\n👤 %s\n🔐 %s\n", conn.RemoteAddr(), conn.User(), string(password))
 	log.Println(msg)
 	_, _, err := twClient.Client.Statuses.Update(msg, nil)
 	if err != nil {
@@ -84,9 +60,9 @@ func main() {
 	setupTwitter()
 
 	config := ssh.ServerConfig{
-		// PublicKeyCallback: keyAuth,
-		PasswordCallback: passAuth,
-		ServerVersion:    "SSH-2.0-YOURMOM",
+		PublicKeyCallback: keyAuth,
+		PasswordCallback:  passAuth,
+		ServerVersion:     "SSH-2.0-YOURMOM",
 	}
 	config.AddHostKey(hostPrivateKeySigner)
 
@@ -102,18 +78,32 @@ func main() {
 	for {
 		conn, err := socket.Accept()
 		if err != nil {
-			log.Printf("[Error] %s", err)
+			log.Printf("[Error] Accepting Socket: %s", err)
+			conn.Close()
 			continue
 		}
 
 		// From a standard TCP connection to an encrypted SSH connection
 		sshConn, _, _, err := ssh.NewServerConn(conn, &config)
+		defer sshConn.Close()
 		if err != nil {
-			log.Printf("[Error] %s", err)
+			log.Printf("[Error] Creating New SSH Connection: %s", err)
+			conn.Close()
 			continue
 		}
 
 		log.Println("Connection from", sshConn.RemoteAddr())
 		sshConn.Close()
 	}
+}
+
+func rfc4716hex(data []byte) string {
+	var fingerprint string
+	for i := 0; i < len(data); i++ {
+		fingerprint = fmt.Sprintf("%s%0.2x", fingerprint, data[i])
+		if i != len(data)-1 {
+			fingerprint = fingerprint + ":"
+		}
+	}
+	return fingerprint
 }
