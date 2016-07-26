@@ -18,6 +18,9 @@ type Twitter struct {
 }
 
 func setupTwitter() {
+	if os.Getenv("SKIP_TWITTER") == "true" {
+		return
+	}
 	// Login and stuff
 	twconfig := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
@@ -32,7 +35,6 @@ func setupTwitter() {
 	_, _, err := client.Accounts.VerifyCredentials(verifyParams)
 	if err != nil {
 		fmt.Printf("[Error] %s\n", err)
-		os.Exit(2)
 	}
 	twClient.Client = client
 }
