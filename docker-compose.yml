@@ -1,2 +1,7 @@
 kesshabot:
-  image: kesshabot:latest
+  image: kesshabot
+  restart: always
+  net: "host"
+  ports:
+    - "2022:2022"
+  env_file: .env
